@@ -1,6 +1,5 @@
 <template>
   <v-card class="mx-auto" max-width="500">
-    <h1>CHAT</h1>
     <v-toolbar color="transparent">
       <v-toolbar-title>Chat</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -38,9 +37,11 @@
         label="Type a message..."
         variant="solo"
         @keydown.enter="sendMessage"
+        :loading="loading"
+        :disabled="loading"
       >
         <template v-slot:append-inner>
-          <v-btn icon="mdi-send" variant="text" @click="sendMessage"></v-btn>
+          <v-btn icon="mdi-send" variant="text" @click="sendMessage" :disabled="loading"></v-btn>
         </template>
       </v-text-field>
     </v-card-actions>
@@ -56,8 +57,10 @@ const chatStore = useChatStore()
 const messages = chatStore.messages
 
 const newMessage = ref('')
+const loading = ref(false)
 
 const sendMessage = async () => {
+  if (loading.value) return
   if (newMessage.value) {
     const userMessage = {
       id: messages.length + 1,
@@ -67,9 +70,20 @@ const sendMessage = async () => {
     }
     chatStore.addMessage(userMessage)
 
-    const webhookUrl = 'https://n8n.opperweb.com/webhook/0d643ef6-d50d-47ba-8a65-152048d79a3e'
+    loading.value = true
+
+    const webhookUrl = '/webhook/0d643ef6-d50d-47ba-8a65-152048d79a3e'
     try {
-      const response = await axios.post(webhookUrl, { message: newMessage.value })
+      const response = await axios.post(
+        webhookUrl,
+        { message: newMessage.value },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+          },
+        },
+      )
       const botResponse = response.data
 
       if (botResponse.response) {
@@ -103,6 +117,8 @@ const sendMessage = async () => {
         avatar: 'https://randomuser.me/api/portraits/women/10.jpg',
         text: 'Sorry, something went wrong.',
       })
+    } finally {
+      loading.value = false
     }
 
     newMessage.value = ''
