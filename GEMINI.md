@@ -61,5 +61,3 @@ src/
 - **Webhook**: Configurado para comunicación con n8n
 - **UX**: Feedback visual durante las peticiones
 - **Código**: Estructurado y documentado
-
-## Próximos Pasos
